@@ -1,12 +1,12 @@
-type RoverState = {
+export type RoverState = {
   x: number;
   y: number;
   direction: CardinalDirection;
 };
 
-type RoverCommand = "F" | "B" | "L" | "R";
+export type RoverCommand = "F" | "B" | "L" | "R";
 
-type CardinalDirection = "N" | "E" | "S" | "W";
+export type CardinalDirection = "N" | "E" | "S" | "W";
 
 export function initializeRover(
   x: number,
@@ -27,13 +27,13 @@ export function initializeRover(
   };
 }
 
-function parseInstructions(instructions: string): RoverCommand[] {
+export function parseInstructions(instructions: string): RoverCommand[] {
   return instructions
     .split("")
     .filter((e) => ["F", "B", "L", "R"].includes(e)) as RoverCommand[];
 }
 
-function moveForward(state: RoverState): RoverState {
+export function moveForward(state: RoverState): RoverState {
   switch (state.direction) {
     case "N":
       return { ...state, y: state.y + 1 };
@@ -46,7 +46,7 @@ function moveForward(state: RoverState): RoverState {
   }
 }
 
-function moveBackward(state: RoverState): RoverState {
+export function moveBackward(state: RoverState): RoverState {
   switch (state.direction) {
     case "N":
       return { ...state, y: state.y - 1 };
@@ -59,7 +59,7 @@ function moveBackward(state: RoverState): RoverState {
   }
 }
 
-function turnLeft(state: RoverState): RoverState {
+export function turnLeft(state: RoverState): RoverState {
   switch (state.direction) {
     case "N":
       return { ...state, direction: "W" };
@@ -72,7 +72,7 @@ function turnLeft(state: RoverState): RoverState {
   }
 }
 
-function turnRight(state: RoverState): RoverState {
+export function turnRight(state: RoverState): RoverState {
   switch (state.direction) {
     case "N":
       return { ...state, direction: "E" };
