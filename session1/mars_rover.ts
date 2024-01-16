@@ -4,15 +4,34 @@ export type RoverState = {
   direction: CardinalDirection;
 };
 
-export type RoverCommand = "F" | "B" | "L" | "R";
+export const roverCommands = ["F", "B", "L", "R"] as const;
+export type RoverCommand = (typeof roverCommands)[number];
+export const command = {
+  FORWARD: "F",
+  BACKWARD: "B",
+  LEFT: "L",
+  RIGHT: "R",
+} as const;
 
-export type CardinalDirection = "N" | "E" | "S" | "W";
+export const cardinalDirections = ["N", "E", "S", "W"] as const;
+export type CardinalDirection = (typeof cardinalDirections)[number];
 
-export function initializeRover(
-  x: number,
-  y: number,
-  direction: CardinalDirection
-): RoverState {
+export const direction = {
+  NORTH: "N",
+  EAST: "E",
+  SOUTH: "S",
+  WEST: "W",
+} as const;
+
+export function initializeRover({
+  x,
+  y,
+  direction,
+}: {
+  x: number;
+  y: number;
+  direction: CardinalDirection;
+}): RoverState {
   if (x !== Math.round(x) || y !== Math.round(y)) {
     throw new Error(`Invalid coordinates: x:${x}, y:${y} should be integers`);
   }
@@ -27,7 +46,7 @@ export function initializeRover(
   };
 }
 
-export function parseInstructions(instructions: string): RoverCommand[] {
+export function parseCommands(instructions: string): RoverCommand[] {
   return instructions
     .split("")
     .filter((e) => ["F", "B", "L", "R"].includes(e)) as RoverCommand[];
@@ -86,7 +105,7 @@ export function turnRight(state: RoverState): RoverState {
 }
 
 export function updateCoordinates(initState: RoverState, instructions: string) {
-  const commands = parseInstructions(instructions);
+  const commands = parseCommands(instructions);
   const state = commands.reduce((state, command) => {
     switch (command) {
       case "F":
@@ -102,11 +121,3 @@ export function updateCoordinates(initState: RoverState, instructions: string) {
 
   return state;
 }
-
-let state = initializeRover(0, 0, "N");
-
-state = updateCoordinates(state, "FRF");
-console.log(state);
-
-// const instructions = "FXF RRLB";
-// console.log(instructions, parseInstructions(instructions));

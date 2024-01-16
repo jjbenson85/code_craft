@@ -1,63 +1,126 @@
 import { describe, expect, it } from "vitest";
 import {
+  CardinalDirection,
+  RoverCommand,
   RoverState,
+  cardinalDirections,
+  command,
   initializeRover,
   moveBackward,
   moveForward,
-  parseInstructions,
+  parseCommands,
+  roverCommands,
   turnLeft,
   turnRight,
   updateCoordinates,
 } from "./mars_rover";
+import {
+  getRandomChar,
+  getRandomFromArray,
+  getRandomInt,
+  getRandomNonInteger,
+} from "../utils/getRandom";
+
+const getRandomDirection = () => {
+  return getRandomFromArray(cardinalDirections);
+};
+
+// Type as record to catch Extra commands if added
+const roverCommandRecords: Record<RoverCommand, RoverCommand> = {
+  F: "F",
+  B: "B",
+  L: "L",
+  R: "R",
+};
+const getRandomRoverCommand = () => getRandomFromArray(roverCommands);
 
 describe("initializeRover", () => {
-  it("should initialise state", () => {
-    expect(initializeRover(1, 2, "N")).toEqual({ x: 1, y: 2, direction: "N" });
-    expect(initializeRover(-1, 2, "E")).toEqual({
-      x: -1,
-      y: 2,
-      direction: "E",
-    });
-    expect(initializeRover(10, 20, "S")).toEqual({
-      x: 10,
-      y: 20,
-      direction: "S",
-    });
-    expect(initializeRover(0, 0, "W")).toEqual({ x: 0, y: 0, direction: "W" });
+  const inputs = Array.from(
+    { length: 5 },
+    (_) =>
+      [getRandomInt(1000), getRandomInt(1000), getRandomDirection()] as const
+  );
+  it.each(inputs)(
+    "should initialise state [x: %i, y: %i, direction: %s]",
+    (x, y, direction) => {
+      expect(initializeRover({ x, y, direction })).toEqual({ x, y, direction });
+    }
+  );
+
+  const errorCoordInputs = Array.from({ length: 5 }, (_) => {
+    return [
+      getRandomNonInteger(1000),
+      getRandomNonInteger(1000),
+      getRandomDirection(),
+    ] as const;
   });
 
-  it("should throw an error when passing non-integer coordinates", () => {
-    expect(() => initializeRover(0.5, 0, "N")).toThrow();
-    expect(() => initializeRover(0, 0.1, "N")).toThrow();
-    expect(() => initializeRover(0.5, 0.1, "N")).toThrow();
+  it.each(errorCoordInputs)(
+    "should throw an error when passing non-integer coordinates: [x: %i, y: %i, direction: %s]",
+    (x, y, direction) => {
+      expect(() => initializeRover({ x, y, direction })).toThrow();
+    }
+  );
+
+  const errorDirectionInputs = Array.from({ length: 5 }, (_) => {
+    return [
+      getRandomInt(1000),
+      getRandomInt(1000),
+      Math.random()
+        .toString(36)
+        .substring(getRandomInt(10) + 1) as CardinalDirection,
+    ] as const;
   });
 
-  it("should throw an error when passing invalid starting coordinate", () => {
-    // @ts-expect-error
-    expect(() => initializeRover(0.5, 0, "X")).toThrow();
-    // @ts-expect-error
-    expect(() => initializeRover(0.5, 0, "NN")).toThrow();
-    // @ts-expect-error
-    expect(() => initializeRover(0.5, 0, "")).toThrow();
-  });
+  it.each(errorDirectionInputs)(
+    "should throw an error when passing invalid starting coordinate: [x: %i, y: %i, direction: %s]",
+    (x, y, direction) => {
+      expect(() => initializeRover({ x, y, direction })).toThrow();
+    }
+  );
 });
 
-describe("parseInstructions", () => {
-  it("should return RoverCommand array", () => {
-    expect(parseInstructions("")).toEqual([]);
-    expect(parseInstructions("FBLR")).toEqual(["F", "B", "L", "R"]);
-    expect(parseInstructions("FFFBLRRR")).toEqual([
-      "F",
-      "F",
-      "F",
-      "B",
-      "L",
-      "R",
-      "R",
-      "R",
-    ]);
-    expect(parseInstructions("FXB")).toEqual(["F", "B"]);
+const createArray = <T>(length: number, callBack: (i?: number) => T): T[] => {
+  return Array.from({ length }, (_, i) => callBack(i));
+};
+
+describe("parseCommands", () => {
+  const inputs = createArray(5, () =>
+    createArray(100, getRandomRoverCommand).join("")
+  );
+
+  const dirtyInputs = createArray(5, () =>
+    createArray(100, () => getRandomChar() + getRandomRoverCommand()).join("")
+  );
+
+  it.each(inputs)("should return array from input: %s", (input) => {
+    const roverCommands = parseCommands(input);
+    expect(roverCommands).toBeInstanceOf(Array);
   });
+
+  it.each(inputs)("should return RoverCommands from input: %s", (input) => {
+    const roverCommands = parseCommands(input);
+    const isValidRoverCommands = roverCommands.every((e) =>
+      roverCommands.includes(e)
+    );
+    expect(isValidRoverCommands).toEqual(true);
+  });
+
+  it.each(dirtyInputs)("should return array from firty input: %s", (input) => {
+    const roverCommands = parseCommands(input);
+    expect(roverCommands).toBeInstanceOf(Array);
+  });
+
+  it.each(dirtyInputs)(
+    "should return RoverCommands from dirty input: %s",
+    (input) => {
+      const roverCommands = parseCommands(input);
+      const isValidRoverCommands = roverCommands.every(
+        (e) => roverCommandRecords[e]
+      );
+      expect(isValidRoverCommands).toEqual(true);
+    }
+  );
 });
 
 describe("moveForward", () => {
